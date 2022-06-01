@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "experimentalDecorators": true,
+        "rootDir": ".",
+        "module": "commonjs",
+        "target": "es2017",
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "allowJs": true,
+        "emitDecoratorMetadata": true,
+        "baseUrl": "src",
+        "paths": {
+            "@/*": [
+                "*"
+            ]
+        }
+    }
+}
