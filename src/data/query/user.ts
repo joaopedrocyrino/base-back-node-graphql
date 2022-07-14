@@ -1,13 +1,31 @@
 import { UserInputError } from 'apollo-server'
 
-import { UserModel } from '../models'
+import { User } from '../../entities'
+import Query from './query'
+import Data from '..'
 
-class UserQuery {
-  async getOne (id: string): Promise<UserModel> {
-    const user = await UserModel.findOne({ id, isDeleted: false })
-    if (!user) { throw new UserInputError('User not found') }
+class UserQuery extends Query {
+  constructor () {
+    super(
+      '"user"',
+      [
+        'unique id',
+        'unique username',
+        'createdAt',
+        'updatedAt',
+        'isDeleted'
+      ]
+    )
+  }
 
-    return user
+  async login (props: { username: string, password: string }): Promise<User> {
+    const user = await Data.query<User>(
+      `SELECT id, password FROM "user" WHERE username = ${props.username}`
+    )
+
+    if (!user.length) { throw new UserInputError('User not found') }
+
+    return user[0]
   }
 }
 

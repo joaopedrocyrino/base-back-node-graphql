@@ -1,9 +1,12 @@
-import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server'
 import moment from 'moment'
 import Joi from 'joi'
+import {
+  AuthenticationError,
+  ForbiddenError,
+  UserInputError
+} from 'apollo-server'
 
 import { Jwt, Uuid } from '../frameworks'
-import { token } from '../dto'
 
 class Services {
   protected createBase (): {
@@ -28,39 +31,45 @@ class Services {
     scope?: string[]
     req: any
   }): Promise<void> {
-    let userPermissions: token = {}
-    let userId = ''
+    let permissions: string[] = []
+    let id = ''
 
     if (token) {
       const { error, ...payload } = await Jwt.decode(token)
       if (error) { throw new AuthenticationError('not_authenticated') }
-      userPermissions = payload.permissions
-      userId = payload.userId
+
+      permissions = payload.permissions
+      id = payload.id
     }
 
-    this.checkScope(userPermissions, scope, req.chainId, userId, req.userId)
+    this.checkScope(permissions, id, scope, req)
 
     this.checkRequest(req, schema)
   }
 
-  private readonly checkScope = (permissions: token, scope?: string[], chainId?: string, userId?: string, reqUserId?: string): void => {
+  private readonly checkScope = (
+    permissions: string[],
+    id: string,
+    scope?: string[],
+    req?: any
+  ): void => {
     if (scope) {
       scope
-        .filter((permission: string) => permission[0] === '+')
-        .map((permission: string): string => { return permission.slice(1) })
-        .forEach((permission: string) => {
-          if (!permissions[chainId]?.includes(permission)) {
-            throw new ForbiddenError(permission)
+        .filter((p: string) => p[0] === '+')
+        .map((p: string): string => { return p.slice(1) })
+        .forEach((p: string) => {
+          if (!permissions.includes(p)) {
+            throw new ForbiddenError(p)
           }
         })
 
-      const scopePermissions = scope.filter((permission: string) => permission[0] !== '+')
+      const scopePermissions = scope.filter((p: string) => p[0] !== '+')
 
       if (scopePermissions.length && !scopePermissions.some((permission: string) => {
         if (permission === 'self') {
-          return userId === reqUserId
+          return id === req.id || id === req.userId
         } else {
-          return permissions[chainId]?.includes(permission)
+          return permissions.includes(permission)
         }
       })) { throw new ForbiddenError('') }
     }

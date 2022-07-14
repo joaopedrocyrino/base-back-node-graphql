@@ -1,17 +1,14 @@
-import * as argon2 from 'argon2'
+import bcrypt from 'bcrypt'
 
 class Hash {
-  async setPassword (password: string): Promise<string> {
-    const pass = await argon2.hash(password, {
-      type: argon2.argon2id
-    })
-    return pass
+  async generate (plaintext: string): Promise<string> {
+    const hash = await bcrypt.hash(plaintext, 15)
+
+    return hash
   }
 
-  async verifyPassword (userHashedPassword: string, password: string): Promise<boolean> {
-    const isValid = await argon2.verify(userHashedPassword, password, {
-      type: argon2.argon2id
-    })
+  async verify (ciphertext: string, plaintext: string): Promise<boolean> {
+    const isValid = await bcrypt.compare(plaintext, ciphertext)
     return isValid
   }
 }
